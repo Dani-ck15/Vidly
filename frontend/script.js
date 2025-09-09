@@ -16,3 +16,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   videoList.appendChild(videoCard);
 });
+
+// Script inicial da Vidly
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Vidly carregado com sucesso!");
+
+  // Testa a conexão com o backend
+  fetch("http://localhost:3000/api/status")
+    .then(response => response.json())
+    .then(data => {
+      console.log("Resposta da API:", data);
+    })
+    .catch(error => {
+      console.error("Erro ao conectar com a API:", error);
+    });
+});
