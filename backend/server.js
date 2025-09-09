@@ -14,3 +14,11 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+// Rota de status da API
+app.get("/api/status", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Vidly API funcionando 🚀"
+  });
+});
