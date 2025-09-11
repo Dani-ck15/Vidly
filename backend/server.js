@@ -60,3 +60,12 @@ app.post("/api/login", (req, res) => {
 
   res.json({ message: "Login realizado com sucesso 🎉", user });
 });
+
+// Rota de teste para usuários
+app.get('/api/users', (req, res) => {
+  res.json([
+    { id: 1, nome: "Alice", email: "alice@vidly.com" },
+    { id: 2, nome: "Bruno", email: "bruno@vidly.com" },
+    { id: 3, nome: "Carla", email: "carla@vidly.com" }
+  ]);
+});
