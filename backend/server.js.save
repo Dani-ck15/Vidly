@@ -1,0 +1,115 @@
+// Importa o express
+const express = require("express");
+const app = express();
+
+// Middleware para interpretar JSON no corpo das requisições
+app.use(express.json());
+
+// Porta do servidor (pode usar a variável de ambiente PORT ou 3000 como padrão)
+const PORT = process.env.PORT || 3000;
+
+// Rota inicial de teste
+app.get("/", (req, res) => {
+  res.send("Vidly backend funcionando 🚀");
+});
+
+// Rota de status da API
+app.get("/api/status", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Vidly API funcionando 🚀"
+  });
+});
+
+// ----------------- CRUD DE USUÁRIOS -----------------
+
+// Lista inicial de usuários (em memória, temporário)
+let users = [
+  { id: 1, nome: "Alice", email: "alice@vidly.com" },
+  { id: 2, nome: "Bruno", email: "bruno@vidly.com" },
+  { id: 3, nome: "Carla", email: "carla@vidly.com" }
+];
+
+// Listar todos os usuários
+app.get("/api/users", (req, res) => {
+  res.json(users);
+});
+
+// Criar um novo usuário
+app.post('/api/users', (req, res) => {
+  const { nome, email } = req.body;
+
+  // Verifica se o nome foi enviado
+  if (!nome || nome.trim() === '') {
+    return res.status(400).json({ error: 'O nome é obrigatório.' });
+  }
+
+  // Regex simples para validar formato de e-mail
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) {
+    return res.status(400).json({ error: 'E-mail inválido.' });
+  }
+
+  // 🔥 NOVO: verifica se já existe usuário com esse e-mail
+  const existe = users.find(u => u.email === email);
+  if (existe) {
+    return res.status(400).json({ error: 'E-mail já cadastrado.' });
+  }
+
+  const existe = users.find(u => u.email === email);
+  users.push(novoUsuario);
+  res.status(201).json(novoUsuario);
+});
+
+// Atualizar usuário existente (PUT /api/users/:id)
+app.put('/api/users/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { nome, email } = req.body;
+
+  const user = users.find(u => u.id === id);
+
+  if (!user) {
+    return res.status(404).json({ error: 'Usuário não encontrado' });
+  }
+
+  if (nome) user.nome = nome;
+  if (email) user.email = email;
+
+  res.json(user);
+});
+
+// Atualizar usuário por ID (PUT)
+app.put("/api/users/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const { nome, email } = req.body;
+
+  const user = users.find(user => user.id === id);
+  if (!user) {
+    return res.status(404).json({ error: "Usuário não encontrado" });
+  }
+
+  if (nome) user.nome = nome;
+  if (email) user.email = email;
+
+  res.json({ message: "Usuário atualizado com sucesso", user });
+});
+
+// Deletar usuário por ID (DELETE)
+app.delete("/api/users/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = users.findIndex(user => user.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: "Usuário não encontrado" });
+  }
+
+  const deletedUser = users.splice(index, 1);
+  res.json({ message: "Usuário deletado com sucesso", user: deletedUser[0] });
+});
+
+// ----------------- FIM CRUD DE USUÁRIOS -----------------
+
+// Inicia o servidor
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});

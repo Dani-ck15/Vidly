@@ -1,67 +1,136 @@
+// server.js - backend usando db.json (arquivo) + bcrypt + jwt
 const express = require("express");
-const app = express();
-const PORT = 3000;
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const db = require("./db");
 
-// Middleware para entender JSON no corpo da requisição
+const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(express.json());
 
-// Teste de status
-app.get("/api/status", (req, res) => {
-  res.json({ message: "Vidly backend funcionando 🚀" });
+const JWT_SECRET = process.env.JWT_SECRET || "segredo-super-seguro";
+
+// ---- rotas ----
+
+// rota inicial
+app.get("/", (req, res) => {
+  res.send("Vidly backend (arquivo JSON) 🚀");
 });
 
-// Lista inicial de usuários (vamos manter em memória por enquanto)
-let users = [
-  { id: 1, name: "Ana", email: "ana@example.com" },
-  { id: 2, name: "João", email: "joao@example.com" },
-  { id: 3, name: "Maria", email: "maria@example.com" }
-];
+// status
+app.get("/api/status", (req, res) => {
+  res.json({ status: "ok", message: "Vidly API funcionando 🚀" });
+});
 
-// READ: listar todos os usuários
+// listar usuários (não retorna senha)
 app.get("/api/users", (req, res) => {
+  const users = db.getUsers().map(u => ({ id: u.id, nome: u.nome, email: u.email }));
   res.json(users);
 });
 
-// READ: pegar usuário por ID
+// buscar usuário por id
 app.get("/api/users/:id", (req, res) => {
-  const user = users.find(u => u.id === parseInt(req.params.id));
+  const id = parseInt(req.params.id);
+  const user = db.findUserById(id);
   if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
-  res.json(user);
+  const { senha, ...safe } = user;
+  res.json(safe);
 });
 
-// CREATE: adicionar novo usuário
-app.post("/api/users", (req, res) => {
-  const { name, email } = req.body;
-  if (!name || !email) {
-    return res.status(400).json({ error: "Nome e email são obrigatórios" });
+// criar usuário
+app.post("/api/users", async (req, res) => {
+  const { nome, email, senha } = req.body;
+  if (!nome || !nome.trim()) return res.status(400).json({ error: "Nome inválido" });
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) return res.status(400).json({ error: "Email inválido" });
+  if (!senha || senha.length < 4) return res.status(400).json({ error: "Senha deve ter pelo menos 4 caracteres" });
+
+  const exists = db.findUserByEmail(email);
+  if (exists) return res.status(400).json({ error: "Email já cadastrado" });
+
+  const hashed = await bcrypt.hash(senha, 10);
+  const id = db.nextId();
+  const newUser = { id, nome, email, senha: hashed };
+  db.addUser(newUser);
+
+  const { senha: _s, ...safe } = newUser;
+  res.status(201).json(safe);
+});
+
+// login
+app.post("/api/login", async (req, res) => {
+  const { email, senha } = req.body;
+  if (!email || !senha) return res.status(400).json({ error: "Email e senha são obrigatórios" });
+
+  const user = db.findUserByEmail(email);
+  if (!user) return res.status(401).json({ error: "Usuário não encontrado" });
+
+  const ok = await bcrypt.compare(senha, user.senha);
+  if (!ok) return res.status(401).json({ error: "Senha incorreta" });
+
+  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "2h" });
+  const { senha: _s, ...safe } = user;
+  res.json({ message: "Login bem-sucedido", token, user: safe });
+});
+
+// middleware para verificar JWT
+function verifyToken(req, res, next) {
+  const auth = req.headers["authorization"];
+  if (!auth) return res.status(401).json({ error: "Token não fornecido" });
+
+  const token = auth.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ error: "Token inválido" });
   }
-  const newUser = { id: users.length + 1, name, email };
-  users.push(newUser);
-  res.status(201).json(newUser);
-});
+}
 
-// UPDATE: atualizar usuário por ID
-app.put("/api/users/:id", (req, res) => {
-  const user = users.find(u => u.id === parseInt(req.params.id));
+// rota de perfil
+app.get("/api/profile", verifyToken, (req, res) => {
+  const user = db.findUserById(req.user.id);
   if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
-
-  const { name, email } = req.body;
-  if (name) user.name = name;
-  if (email) user.email = email;
-
-  res.json(user);
+  const { senha, ...safe } = user;
+  res.json({ ...safe, message: "Perfil acessado com sucesso" });
 });
 
-// DELETE: remover usuário por ID
-app.delete("/api/users/:id", (req, res) => {
-  const userIndex = users.findIndex(u => u.id === parseInt(req.params.id));
-  if (userIndex === -1) return res.status(404).json({ error: "Usuário não encontrado" });
+// atualizar usuário
+app.put("/api/users/:id", verifyToken, (req, res) => {
+  const id = parseInt(req.params.id);
+  if (req.user.id !== id) return res.status(403).json({ error: "Você só pode atualizar o próprio perfil" });
 
-  const deletedUser = users.splice(userIndex, 1);
-  res.json(deletedUser[0]);
+  const { nome, email } = req.body;
+  const updates = {};
+  if (nome) updates.nome = nome;
+  if (email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return res.status(400).json({ error: "Email inválido" });
+    const exists = db.findUserByEmail(email);
+    if (exists && exists.id !== id) return res.status(400).json({ error: "Email já está em uso" });
+    updates.email = email;
+  }
+
+  const updated = db.updateUser(id, updates);
+  if (!updated) return res.status(404).json({ error: "Usuário não encontrado" });
+
+  const { senha, ...safe } = updated;
+  res.json(safe);
 });
 
-// Servidor rodando
+// deletar usuário
+app.delete("/api/users/:id", verifyToken, (req, res) => {
+  const id = parseInt(req.params.id);
+  if (req.user.id !== id) return res.status(403).json({ error: "Você só pode deletar o próprio perfil" });
+
+  const deleted = db.deleteUser(id);
+  if (!deleted) return res.status(404).json({ error: "Usuário não encontrado" });
+  res.json({ message: "Usuário deletado com sucesso" });
+});
+
+// iniciar servidor
 app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
+  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });

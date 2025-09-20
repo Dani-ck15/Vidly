@@ -1,0 +1,10 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "nome": "Joao Silva",
+      "email": "joao@email.com",
+      "senha": "$2b$10$0O1x3LxGSn0Wnoc3kJfQfeZKkB2DMPCBXurI0omZ.x8VsGmwpKH4O"
+    }
+  ]
+}
