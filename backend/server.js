@@ -9,6 +9,11 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+// Rota de teste para deploy
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", message: "Vidly backend está rodando 🚀" });
+});
+
 const JWT_SECRET = process.env.JWT_SECRET || "segredo-super-seguro";
 
 // ---- rotas ----
