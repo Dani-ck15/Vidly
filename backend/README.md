@@ -1,80 +1,97 @@
-# Vidly - Backend
-
-Backend da aplicação **Vidly**, desenvolvido em **Node.js + Express**, com autenticação via **JWT** e persistência simples em arquivo JSON (`db.json`).
+Este é o backend do projeto **Vidly**, rodando em Node.js + Express com persistência em arquivo JSON.
 
 ---
 
-## 🚀 Como rodar
+## 🚀 Deploy Online
 
-```bash
-cd backend
+O backend já está disponível em produção através do Render:  
+
+👉 **Base URL da API:**
+
+https://vidly-backend-ek8p.onrender.com
+
+---
+
+## 📌 Endpoints
+
+### Status
+```http
+GET /api/status
+
+Exemplo:
+https://vidly-backend-ek8p.onrender.com/api/status
+
+
+---
+
+Usuários
+
+Listar todos
+
+GET /api/users
+
+Buscar por ID
+
+GET /api/users/:id
+
+Criar usuário
+
+POST /api/users
+Content-Type: application/json
+
+{
+  "nome": "João",
+  "email": "joao@example.com",
+  "senha": "1234"
+}
+
+Login
+
+POST /api/login
+Content-Type: application/json
+
+{
+  "email": "joao@example.com",
+  "senha": "1234"
+}
+
+Retorna um token JWT para acessar rotas protegidas.
+
+Perfil do usuário (rota protegida)
+
+GET /api/profile
+Authorization: Bearer <token>
+
+Atualizar usuário
+
+PUT /api/users/:id
+Authorization: Bearer <token>
+
+Deletar usuário
+
+DELETE /api/users/:id
+Authorization: Bearer <token>
+
+
+---
+
+📦 Rodando Localmente
+
+# instalar dependências
 npm install
-node server.js
 
-Servidor inicia em:
+# rodar servidor
+npm start
 
+O servidor rodará em:
 http://localhost:3000
 
 
 ---
 
-🔑 Rotas principais
+📝 Observações
 
-Status
+No plano gratuito do Render, a aplicação pode "hibernar" após inatividade.
 
-GET /api/status → Verifica se o backend está rodando.
-
-
-Usuários
-
-GET /api/users → Lista todos os usuários (sem senha).
-
-GET /api/users/:id → Busca usuário por ID.
-
-POST /api/users → Cria novo usuário (nome, email, senha).
-
-PUT /api/users/:id → Atualiza usuário (precisa do token JWT).
-
-DELETE /api/users/:id → Remove usuário (precisa do token JWT).
-
-
-Autenticação
-
-POST /api/login → Faz login e retorna JWT.
-
-GET /api/profile → Acessa perfil do usuário autenticado.
-
-
-
----
-
-⚙️ Configuração
-
-O backend usa a variável de ambiente:
-
-JWT_SECRET
-
-Caso não esteja definida, será usado o valor padrão "segredo123".
-
-
----
-
-📂 Estrutura do projeto
-
-backend/
-├── db.js         # Manipulação de usuários no db.json
-├── db.json       # "Banco de dados" local em JSON
-├── server.js     # Servidor Express
-├── package.json
-└── README.md
-
-
----
-
-🧪 Testes
-
-Até o momento, só existem testes manuais via rotas.
-
-Futuramente, podem ser criados testes automatizados (ex: Jest + Supertest).
-
-
+O primeiro acesso após um tempo parado pode levar alguns segundos para iniciar.
+EOF
