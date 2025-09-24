@@ -1,97 +1,121 @@
-Este é o backend do projeto **Vidly**, rodando em Node.js + Express com persistência em arquivo JSON.
+# Vidly Backend 🚀
+
+Backend da aplicação **Vidly**, feito em **Node.js + Express**, com autenticação JWT, armazenamento simples em arquivo JSON (`db.json`) e testes automatizados.
 
 ---
 
-## 🚀 Deploy Online
+## 📦 Requisitos
 
-O backend já está disponível em produção através do Render:  
-
-👉 **Base URL da API:**
-
-https://vidly-backend-ek8p.onrender.com
+- Node.js 18+  
+- NPM  
+- (Opcional) Termux no Android  
 
 ---
 
-## 📌 Endpoints
+## ⚙️ Instalação
 
-### Status
-```http
-GET /api/status
+Clone o repositório e instale as dependências:
 
-Exemplo:
-https://vidly-backend-ek8p.onrender.com/api/status
-
-
----
-
-Usuários
-
-Listar todos
-
-GET /api/users
-
-Buscar por ID
-
-GET /api/users/:id
-
-Criar usuário
-
-POST /api/users
-Content-Type: application/json
-
-{
-  "nome": "João",
-  "email": "joao@example.com",
-  "senha": "1234"
-}
-
-Login
-
-POST /api/login
-Content-Type: application/json
-
-{
-  "email": "joao@example.com",
-  "senha": "1234"
-}
-
-Retorna um token JWT para acessar rotas protegidas.
-
-Perfil do usuário (rota protegida)
-
-GET /api/profile
-Authorization: Bearer <token>
-
-Atualizar usuário
-
-PUT /api/users/:id
-Authorization: Bearer <token>
-
-Deletar usuário
-
-DELETE /api/users/:id
-Authorization: Bearer <token>
-
-
----
-
-📦 Rodando Localmente
-
-# instalar dependências
+```bash
+git clone https://github.com/seu-usuario/vidly.git
+cd vidly/backend
 npm install
 
-# rodar servidor
+
+---
+
+▶️ Rodando localmente
+
 npm start
 
-O servidor rodará em:
+O backend ficará disponível em:
+
 http://localhost:3000
 
 
 ---
 
-📝 Observações
+✅ Testes
 
-No plano gratuito do Render, a aplicação pode "hibernar" após inatividade.
+Os testes usam supertest e jest.
 
-O primeiro acesso após um tempo parado pode levar alguns segundos para iniciar.
-EOF
+Rodar todos os testes:
+
+npm test
+
+
+---
+
+🌐 Deploy (Render)
+
+O backend também está disponível online (pacote free do Render):
+
+👉 https://vidly-backend-ek8p.onrender.com
+
+
+---
+
+🔑 Endpoints
+
+Health check
+
+GET /api/status
+
+Retorna status da API.
+
+Listar usuários
+
+GET /api/users
+
+Retorna lista de usuários (sem senhas).
+
+Criar usuário
+
+POST /api/users
+Body: { "nome": "Ana", "email": "ana@email.com", "senha": "1234" }
+
+Login
+
+POST /api/login
+Body: { "email": "ana@email.com", "senha": "1234" }
+
+Retorna JWT para autenticação.
+
+Perfil do usuário (rota protegida)
+
+GET /api/profile
+Headers: { "Authorization": "Bearer <token>" }
+
+Atualizar usuário
+
+PUT /api/users/:id
+Headers: { "Authorization": "Bearer <token>" }
+Body: { "nome": "Novo Nome" }
+
+Deletar usuário
+
+DELETE /api/users/:id
+Headers: { "Authorization": "Bearer <token>" }
+
+
+---
+
+📖 Notas
+
+Dados ficam salvos em db.json.
+
+Senhas são hasheadas com bcrypt.
+
+Autenticação feita com JWT.
+
+
+
+---
+
+📌 Próximos passos
+
+Criar frontend (React/Next.js ou outra opção).
+
+Melhorar cobertura de testes.
+
+Documentação com Swagger/OpenAPI.

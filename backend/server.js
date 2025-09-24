@@ -1,10 +1,12 @@
 // server.js - backend usando db.json (arquivo) + bcrypt + jwt
 const express = require("express");
+const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("./db");
 
 const app = express();
+app.use(cors()); // habilita CORS para todas as origens
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -139,3 +141,11 @@ app.delete("/api/users/:id", verifyToken, (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app; // necessário para os testes
